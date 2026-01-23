@@ -14,83 +14,7 @@ import { createPostApi } from "@/services/post"
 import { toast } from "sonner"
 import { uploadToCloudinary } from "@/lib/helper"
 import { useAuth } from "@/lib/auth-context"
-
-/* Added emoji data */
-const emojis = [
-  "😀",
-  "😃",
-  "😄",
-  "😁",
-  "😆",
-  "😅",
-  "🤣",
-  "😂",
-  "🙂",
-  "🙃",
-  "😉",
-  "😊",
-  "😇",
-  "🥰",
-  "😍",
-  "🤩",
-  "😘",
-  "😗",
-  "😚",
-  "😙",
-  "🥲",
-  "😋",
-  "😛",
-  "😜",
-  "🤪",
-  "😝",
-  "🤑",
-  "🤗",
-  "🤭",
-  "🤫",
-  "🤔",
-  "🤐",
-  "🤨",
-  "😐",
-  "😑",
-  "😶",
-  "😏",
-  "😒",
-  "🙄",
-  "😬",
-  "🤥",
-  "😌",
-  "😔",
-  "😪",
-  "🤤",
-  "😴",
-  "😷",
-  "🤒",
-  "🤕",
-  "❤️",
-  "🧡",
-  "💛",
-  "💚",
-  "💙",
-  "💜",
-  "🖤",
-  "🤍",
-  "🤎",
-  "💔",
-  "❣️",
-  "💕",
-  "👍",
-  "👎",
-  "👏",
-  "🙌",
-  "👐",
-  "🤲",
-  "🤝",
-  "🙏",
-  "✨",
-  "💫",
-  "🔥",
-  "💯",
-]
+import { emojis } from "@/lib/constant"
 
 export function CreatePost({renewFeed}:any) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -201,7 +125,7 @@ export function CreatePost({renewFeed}:any) {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
-                <AvatarImage src="/abstract-profile.png" alt="Your profile" />
+                <AvatarImage src={user.profile_image || "/man.jpg"} alt="Your profile" />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div>

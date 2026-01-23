@@ -1,3 +1,6 @@
+
+import { useEffect, useState } from "react"
+
 // lib/uploadToCloudinary.ts
 export const uploadToCloudinary = async (
   file: File,
@@ -27,4 +30,17 @@ export const uploadToCloudinary = async (
     publicId: data.public_id,
     resourceType: data.resource_type,
   }
+}
+
+
+
+export function useDebounce<T>(value: T, delay = 400) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+
+  return debouncedValue
 }

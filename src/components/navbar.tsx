@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Home, MessageCircle, Bell, Settings, LogOut, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,14 +15,84 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useDebounce } from "@/lib/helper"
+import { searchUser } from "@/services/user"
 
 // Mock users data for search
 const mockUsers = [
-  { id: 1, full_name: "Sarah Johnson", profile_image: "/diverse-woman-portrait.png" },
-  { id: 2, full_name: "Michael Chen", profile_image: "/man.jpg" },
-  { id: 3, full_name: "Emma Williams", profile_image: "/diverse-woman-portrait.png" },
-  { id: 4, full_name: "David Brown", profile_image: "/diverse-group-friends.png" },
-  { id: 5, full_name: "Lisa Anderson", profile_image: "/diverse-group-women.png" },
+  {
+    id: 1,
+    full_name: "Sarah Johnson",
+    username: "sarahjohnson",
+    avatar: "/diverse-woman-portrait.png",
+    coverImage: "/serene-mountain-lake.png",
+    bio: "Product Designer | UX Enthusiast | Coffee Lover",
+    location: "San Francisco, CA",
+    work: "Google",
+    education: "Stanford University",
+    followers: 2340,
+    following: 890,
+    posts: 156,
+    isFollowing: false,
+    dateOfBirth: "1992-03-15",
+  },
+  {
+    id: 2,
+    full_name: "Michael Chen",
+    username: "michaelchen",
+    avatar: "/man.jpg",
+    coverImage: "/abstract-geometric-flow.png",
+    bio: "Software Engineer | Open Source Contributor",
+    location: "New York, NY",
+    work: "Microsoft",
+    education: "MIT",
+    followers: 1890,
+    following: 654,
+    posts: 234,
+    isFollowing: false,
+    dateOfBirth: "1988-07-22",
+  },
+  {
+    id: 3,
+    name: "Emma Williams",
+    full_username: "emmawilliams",
+    avatar: "/diverse-woman-portrait.png",
+    bio: "Marketing Manager | Digital Strategist",
+    location: "London, UK",
+    work: "Meta",
+    education: "Oxford University",
+    followers: 3120,
+    following: 1200,
+    posts: 189,
+    isFollowing: true,
+    dateOfBirth: "1995-11-08",
+  },
+  {
+    id: 4,
+    full_name: "David Brown",
+    username: "davidbrown",
+    avatar: "/diverse-group-friends.png",
+    bio: "Entrepreneur | Startup Founder",
+    location: "Austin, TX",
+    followers: 5670,
+    following: 432,
+    posts: 298,
+    isFollowing: false,
+    dateOfBirth: "1985-05-30",
+  },
+  {
+    id: 5,
+    full_name: "Lisa Anderson",
+    username: "lisaanderson",
+    avatar: "/diverse-group-women.png",
+    bio: "Photographer | Travel Blogger",
+    location: "Los Angeles, CA",
+    followers: 8900,
+    following: 2340,
+    posts: 567,
+    isFollowing: false,
+    dateOfBirth: "1993-09-12",
+  },
 ]
 
 export function Navbar() {
@@ -31,6 +101,31 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<any>([])
   const [showResults, setShowResults] = useState(false)
+  const [loading, setLoading] = useState(false)
+  // const [selectedUser, setSelectedUser] = useState<(typeof mockUsers)[0] | null>(null)
+
+  const debouncedQuery = useDebounce(searchQuery)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!debouncedQuery.trim()) {
+        setSearchResults([])
+        return
+      }
+
+      try {
+        setLoading(true)
+        const res = await searchUser(debouncedQuery)
+        setSearchResults(res.data)
+      } catch {
+        setSearchResults([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [debouncedQuery])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -42,6 +137,12 @@ export function Navbar() {
       setSearchResults([])
       setShowResults(false)
     }
+  }
+
+  const handleUserClick = (user: (typeof mockUsers)[0]) => {
+    router.push(`/user/${user.username}`)
+    setSearchQuery("")
+    setShowResults(false)
   }
 
   return (
@@ -71,31 +172,33 @@ export function Navbar() {
             </div>
 
             {/* Search Results Dropdown */}
-            {showResults && searchResults.length > 0 && (
-              <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg max-h-96 overflow-y-auto">
+            {showResults && (
+              <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-lg">
+                {loading && (
+                  <p className="p-3 text-sm text-muted-foreground text-center">
+                    Searching...
+                  </p>
+                )}
+
+                {!loading && searchResults.length === 0 && (
+                  <p className="p-3 text-sm text-muted-foreground text-center">
+                    No users found
+                  </p>
+                )}
+
                 {searchResults.map((user:any) => (
                   <button
                     key={user.id}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-                    onClick={() => {
-                      console.log("Selected user:", user.username)
-                      setSearchQuery("")
-                      setShowResults(false)
-                    }}
+                    onClick={() => router.push(`/user/${user.username}`)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted"
                   >
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={user?.profile_image || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback>{user.username?.charAt(0)}</AvatarFallback>
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user.profile_image} />
+                      <AvatarFallback>{user.username[0]}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-foreground">{user.full_name}</span>
+                    <span className="font-medium">{user.full_name}</span>
                   </button>
                 ))}
-              </div>
-            )}
-
-            {showResults && searchQuery && searchResults.length === 0 && (
-              <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg p-4">
-                <p className="text-sm text-muted-foreground text-center">No users found</p>
               </div>
             )}
           </div>
@@ -164,6 +267,9 @@ export function Navbar() {
           </div>
         </div>
       </div>
+      {/* {selectedUser && (
+        <UserProfileViewer isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} user={selectedUser} />
+      )} */}
     </nav>
   )
 }

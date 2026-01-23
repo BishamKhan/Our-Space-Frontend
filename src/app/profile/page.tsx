@@ -17,10 +17,11 @@ import { PostCard } from "@/components/post-card"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Navbar } from "@/components/navbar"
 import { toast } from "sonner"
-import { getUserDetails, updateProfilePic, updateUserInfo } from "@/services/user"
+import { getUserDetails, updateCoverPic, updateProfilePic, updateUserInfo } from "@/services/user"
 import { getUserFeed } from "@/services/post"
 import { PostCardComponent } from "@/components/post-card-component"
 import { uploadToCloudinary } from "@/lib/helper"
+import { ImageViewer } from "@/components/image-viewer"
 
 // Mock user posts
 const mockUserPosts = [
@@ -70,6 +71,12 @@ function ProfilePage() {
   const [isEditingAbout, setIsEditingAbout] = useState(false)
   const [userFeed, setUserFeed] = useState<any[]>([])
   const [files, setFiles] = useState<any>()
+  const [userData, setUserData] = useState<any>()
+
+
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
+  const [viewerImages, setViewerImages] = useState<string[]>([])
+  const [viewerInitialIndex, setViewerInitialIndex] = useState(0)
 
   // Form states
   const [editForm, setEditForm] = useState({
@@ -98,6 +105,7 @@ function ProfilePage() {
 
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    setFiles(file)
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -108,42 +116,37 @@ function ProfilePage() {
   }
 
   const handleSaveProfilePic = async () => {
-    try {      
-      const upload = await uploadToCloudinary(files,"image")
-      console.log("upload.url",upload.url)
+    try {
+      const upload = await uploadToCloudinary(files, "image")
       const res = await updateProfilePic({
-        profile_image : upload.url
+        profile_image: upload.url
       })
-      console.log("res==", res)
       updateUser(res.data)
-      toast.success("Profile Pic Updated")
+      toast.success("Profile Photo Updated")
       setIsEditingProfile(false)
       setProfileImagePreview(null)
+      setFiles("")
     } catch {
       toast.error("Update failed")
     }
-    // if (user && profileImagePreview) {
-    //   updateUser({
-    //     ...user,
-    //     avatar: profileImagePreview,
-    //   })
-    //   toast.success("Profile picture updated!")
-    //   setIsEditingProfile(false)
-    //   setProfileImagePreview(null)
-    // }
   }
 
-  // const handleSaveCover = () => {
-  //   if (user && coverImagePreview) {
-  //     updateUser({
-  //       ...user,
-  //       coverImage: coverImagePreview,
-  //     })
-  //     toast.success("Cover photo updated!")
-  //     setIsEditingCover(false)
-  //     setCoverImagePreview(null)
-  //   }
-  // }
+  const handleSaveCover = async () => {
+    try {
+      const upload = await uploadToCloudinary(files, "image")
+      const res = await updateCoverPic({
+        cover_image: upload.url
+      })
+      console.log("res==", res)
+      updateUser(res.data)
+      toast.success("Cover Photo Updated")
+      setIsEditingCover(false)
+      setProfileImagePreview(null)
+      setFiles("file")
+    } catch {
+      toast.error("Update failed")
+    }
+  }
 
   const handleSaveAbout = async () => {
     try {
@@ -176,7 +179,9 @@ function ProfilePage() {
   const handleGetUserInfo = async () => {
     try {
       const info = await getUserDetails() // call the function
-      console.log(info, 'info')
+
+      console.log("userdetails", info)
+      setUserData(info.data)
       // setUserFeed(posts.data)
     } catch (error) {
       toast.error("Error fetching user posts")
@@ -190,6 +195,11 @@ function ProfilePage() {
     handleGetUserInfo()
   }, [])
 
+  const openImageViewer = (images: string[], initialIndex = 0) => {
+    setViewerImages(images)
+    setViewerInitialIndex(initialIndex)
+    setIsImageViewerOpen(true)
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -201,11 +211,16 @@ function ProfilePage() {
             <img
               src={user?.cover_image || "/abstract-geometric-flow.png"}
               alt="Cover"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+              onClick={() => openImageViewer([user?.cover_image || "/abstract-geometric-flow.png"])}
             />
             <Dialog open={isEditingCover} onOpenChange={setIsEditingCover}>
               <DialogTrigger asChild>
-                <Button size="sm" className="absolute bottom-4 right-4 gap-2" variant="secondary">
+                <Button
+                  size="sm"
+                  className="absolute bottom-4 right-4 gap-2 z-10 pointer-events-auto"
+                  variant="secondary"
+                >
                   <Camera className="w-4 h-4" />
                   Edit Cover Photo
                 </Button>
@@ -238,7 +253,7 @@ function ProfilePage() {
                     <Button variant="outline" onClick={() => setIsEditingCover(false)}>
                       Cancel
                     </Button>
-                    <Button disabled={!coverImagePreview}>
+                    <Button onClick={handleSaveCover} disabled={!coverImagePreview}>
                       Save Cover Photo
                     </Button>
                   </div>
@@ -253,7 +268,10 @@ function ProfilePage() {
               <div className="absolute -top-24 left-0 right-0 flex items-end justify-between">
                 {/* Profile Picture */}
                 <div className="relative">
-                  <Avatar className="w-40 h-40 border-4 border-background">
+                  <Avatar
+                    className="w-40 h-40 border-4 border-background cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => openImageViewer([user?.profile_image || "/diverse-avatars.png"])}
+                  >
                     <AvatarImage src={user?.profile_image || "/diverse-avatars.png"} alt={user?.full_name} />
                     <AvatarFallback className="text-4xl">{user?.full_name?.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -378,15 +396,15 @@ function ProfilePage() {
                 {/* Stats */}
                 <div className="flex gap-6 mt-4">
                   <div>
-                    <span className="font-bold text-foreground">{user?.total_post || 0}</span>
+                    <span className="font-bold text-foreground">{userData?.total_posts || 0}</span>
                     <span className="text-muted-foreground ml-1">Posts</span>
                   </div>
                   <div>
-                    <span className="font-bold text-foreground">{user?.followers || 0}</span>
+                    <span className="font-bold text-foreground">{userData?.followers_count || 0}</span>
                     <span className="text-muted-foreground ml-1">Followers</span>
                   </div>
                   <div>
-                    <span className="font-bold text-foreground">{user?.following || 0}</span>
+                    <span className="font-bold text-foreground">{userData?.following_count || 0}</span>
                     <span className="text-muted-foreground ml-1">Following</span>
                   </div>
                 </div>
@@ -421,7 +439,7 @@ function ProfilePage() {
                 <div className="space-y-4 max-w-2xl">
                   {
                     userFeed.length > 0 ? userFeed.map((post) => (
-                      <PostCard key={post.id} post={mockUserPosts[0]} data={post} />
+                      <PostCard key={post.id} data={post} />
                     )) : <p className="font-semibold text-xl text-foreground ">No posts</p>
                   }
                 </div>
@@ -472,7 +490,7 @@ function ProfilePage() {
                           <div className="flex-1">
                             <p className="text-sm text-muted-foreground mb-1">Born on</p>
                             <p className="font-medium text-foreground">
-                              {new Date(user?.date_of_birth || "").toLocaleDateString("en-US", {
+                              {new Date(user?.dateOfBirth || "").toLocaleDateString("en-US", {
                                 month: "long",
                                 day: "numeric",
                                 year: "numeric",
@@ -502,6 +520,8 @@ function ProfilePage() {
                         <div
                           key={index}
                           className="aspect-square rounded-lg overflow-hidden bg-muted hover:scale-105 transition-transform cursor-pointer group relative"
+                          // Made photos clickable to open viewer with all photos
+                          onClick={() => openImageViewer(mockUserPhotos, index)}
                         >
                           <img
                             src={photo || "/placeholder.svg"}
@@ -521,6 +541,12 @@ function ProfilePage() {
           </div>
         </div>
       </div>
+      <ImageViewer
+        images={viewerImages}
+        initialIndex={viewerInitialIndex}
+        isOpen={isImageViewerOpen}
+        onClose={() => setIsImageViewerOpen(false)}
+      />
     </div>
   )
 }

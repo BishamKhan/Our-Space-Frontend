@@ -32,7 +32,7 @@ export function ImageViewer({ images, initialIndex = 0, isOpen, onClose }: Image
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogTitle>abc</DialogTitle>
+      <DialogTitle hidden >abc</DialogTitle>
       <DialogContent className="max-w-7xl h-[90vh] p-0 bg-black/95 border-0">
         {/* Close Button */}
         <Button

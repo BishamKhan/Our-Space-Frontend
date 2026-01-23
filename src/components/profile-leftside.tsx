@@ -43,11 +43,11 @@ export function ProfileSidebar() {
             <p className="text-xs text-muted-foreground">Posts</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{user?.followers || 0}</p>
+            <p className="text-lg font-bold text-foreground">{user?.followers_count || 0}</p>
             <p className="text-xs text-muted-foreground">Followers</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{user?.following || 0}</p>
+            <p className="text-lg font-bold text-foreground">{user?.following_count || 0}</p>
             <p className="text-xs text-muted-foreground">Following</p>
           </div>
         </div>

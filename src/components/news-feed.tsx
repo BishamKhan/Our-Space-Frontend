@@ -5,6 +5,7 @@ import { PostCard } from "@/components/post-card"
 import { toast } from "sonner"
 import { getNewsFeed } from "@/services/feed"
 import { useEffect, useState } from "react"
+import { Stories } from "./stories"
 
 
 export function NewsFeed() {
@@ -29,6 +30,9 @@ export function NewsFeed() {
 
   return (
     <div className="space-y-6">
+      {/* User stories */}
+      <Stories />
+
       {/* Create Post Section */}
       <CreatePost renewFeed={handleGetNewsFeed} />
 
@@ -36,7 +40,7 @@ export function NewsFeed() {
       <div className="space-y-4">
         {
           posts.length > 0 ? posts.map((post:any) => (
-            <PostCard key={post.id} data={post} />
+            <PostCard key={post.id} data={post} renewFeed={handleGetNewsFeed} />
           )) : <p className="font-semibold text-xl text-foreground ">No posts</p>
         }
       </div>

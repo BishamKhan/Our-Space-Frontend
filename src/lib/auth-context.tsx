@@ -67,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (payload: any) => {
     setIsLoading(true)
     const formData = {
+      full_name: payload.full_name,
       username: payload.username,
       email: payload.email,
       password: payload.password,
